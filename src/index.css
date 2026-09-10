@@ -1,0 +1,254 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+/* Brand theme "skylight" — single light palette used across HR + Employee */
+@plugin "daisyui/theme" {
+  name: "skylight";
+  default: true;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-base-100: #ffffff;
+  --color-base-200: #f4f8fc;
+  --color-base-300: #e5eef7;
+  --color-base-content: #1c2b3a;
+
+  --color-primary: #0284c7;
+  --color-primary-content: #ffffff;
+
+  --color-secondary: #f2a541;
+  --color-secondary-content: #3a2405;
+
+  --color-accent: #0ea5e9;
+  --color-accent-content: #ffffff;
+
+  --color-neutral: #33495c;
+  --color-neutral-content: #f4f8fc;
+
+  --color-info: #3b9adf;
+  --color-info-content: #ffffff;
+
+  --color-success: #16a34a;
+  --color-success-content: #ffffff;
+
+  --color-warning: #f2a541;
+  --color-warning-content: #3a2405;
+
+  --color-error: #e0483e;
+  --color-error-content: #ffffff;
+
+  --radius-selector: 0.75rem;
+  --radius-field: 0.6rem;
+  --radius-box: 1rem;
+
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin "daisyui" {
+  themes: skylight --default;
+}
+
+/* Global typography and surface */
+:root {
+  --brand-blue: #0284c7;
+  --brand-blue-dark: #075985;
+  --brand-blue-light: #e0f2fe;
+  --brand-amber: #f2a541;
+
+  /* Inter for body text, Plus Jakarta Sans for headings */
+  --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-heading: "Plus Jakarta Sans", "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+html {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-base-200);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  width: 100%;
+}
+
+/* Prevent images/media from forcing horizontal overflow on small screens */
+@layer base {
+  img,
+  video,
+  svg {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  letter-spacing: -0.015em;
+}
+
+/* Slim, elegant scrollbars everywhere */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cfe3f5 transparent;
+}
+*::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: #cfe3f5;
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: #9cc7ea;
+}
+
+/* Professional table styling, applied to every table in the app */
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.85rem;
+}
+
+/* Tables scroll horizontally on small screens instead of squeezing content */
+.overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 640px) {
+  table {
+    font-size: 0.8rem;
+  }
+
+  table thead th,
+  table tbody td {
+    padding: 0.65rem 0.75rem;
+  }
+}
+
+table thead th {
+  background-color: var(--brand-blue-light);
+  color: #075985;
+  font-weight: 600;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-align: left;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid #cfe3f5;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+table thead th:first-child { border-top-left-radius: 0.75rem; }
+table thead th:last-child { border-top-right-radius: 0.75rem; }
+
+table tbody td {
+  padding: 0.75rem 1rem;
+  color: #33495c;
+  border-bottom: 1px solid #eef4fa;
+  vertical-align: middle;
+}
+
+table tbody tr {
+  background-color: #ffffff;
+  transition: background-color 0.15s ease;
+}
+
+table tbody tr:nth-of-type(even) {
+  background-color: #fbfdff;
+}
+
+table tbody tr:hover {
+  background-color: var(--brand-blue-light);
+}
+
+table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Inputs, buttons, cards — soft, light, professional feel */
+.card {
+  box-shadow: 0 1px 3px rgba(2, 132, 199, 0.06), 0 8px 24px -12px rgba(2, 132, 199, 0.10);
+}
+
+.input,
+.select,
+.textarea {
+  background-color: #ffffff;
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
+
+.btn-primary {
+  box-shadow: 0 6px 16px -6px rgba(2, 132, 199, 0.45);
+}
+
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  #salary-slip,
+  #salary-slip * {
+    visibility: visible;
+  }
+
+  #salary-slip {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}
+@page {
+  size: A4;
+  margin: 0;
+}
+
+
+/* CreateNewJobModal */
+.label {
+  @apply mb-0.5 block text-[10px] font-medium text-gray-600;
+}
+
+.input-xs {
+  @apply w-full rounded-md bg-gray-100 border border-gray-200
+  px-2 py-2 text-[11px]
+  outline-none focus:ring-1 focus:ring-sky-500;
+}
+
+.textarea-xs {
+  @apply w-full rounded-md bg-gray-100 border border-gray-200
+  px-2 py-2 text-[11px]
+  outline-none focus:ring-1 focus:ring-sky-500
+  resize-none;
+}
+
+.radial-progress {
+  --track: #e5e7eb;
+}
