@@ -1,19 +1,48 @@
-import React from "react";
+import React, { useRef } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
-import { User, ImagePlus } from "lucide-react";
+import { User, ImagePlus, AlertCircle } from "lucide-react";
 import { useFormMode } from "../context/FormModeContext";
+import { MAX_FILE_SIZE_MB, MAX_FILE_SIZE_BYTES } from "../formConstants";
 
 export default function PersonalStep() {
   const {
     register,
     control,
+    setValue,
+    setError,
+    clearErrors,
     formState: { errors },
   } = useFormContext();
   const { isView, mode } = useFormMode();
+  const photoInputRef = useRef(null);
 
   const profilePhoto = useWatch({ name: "personal.profilePhoto", control });
   const existingPhotoUrl =
     typeof profilePhoto === "string" && profilePhoto ? profilePhoto : null;
+
+  const photoError = errors?.personal?.profilePhoto;
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      const selectedSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      const errorMsg = `Profile photo size (${selectedSizeMB} MB) exceeds ${MAX_FILE_SIZE_MB} MB limit. Please select a smaller image.`;
+
+      setError("personal.profilePhoto", {
+        type: "manual",
+        message: errorMsg,
+      });
+
+      e.target.value = "";
+      setValue("personal.profilePhoto", null, { shouldValidate: true });
+      return;
+    }
+
+    clearErrors("personal.profilePhoto");
+    setValue("personal.profilePhoto", e.target.files, { shouldValidate: true });
+  };
 
   return (
     <div className="space-y-5">
@@ -146,10 +175,13 @@ export default function PersonalStep() {
 
       {/* File input for profile photo */}
       <div className="form-control w-full">
-        <label className="label">
-          <span className="label-text flex items-center gap-1.5">
+        <label className="label pb-1">
+          <span className="label-text flex items-center gap-1.5 font-medium">
             <ImagePlus className="h-3.5 w-3.5" />
             Profile Photo
+          </span>
+          <span className="text-[11px] text-base-content/50">
+            Max: {MAX_FILE_SIZE_MB} MB (JPG, PNG)
           </span>
         </label>
 
@@ -167,15 +199,27 @@ export default function PersonalStep() {
         )}
 
         {!isView && (
-          <input
-            type="file"
-            accept="image/*"
-            {...register("personal.profilePhoto")}
-            name="personal[profilePhoto]" // MUST
-            className="file-input file-input-bordered w-full"
-          />
+          <>
+            <input
+              ref={photoInputRef}
+              type="file"
+              accept="image/*"
+              name="personal[profilePhoto]"
+              onChange={handlePhotoChange}
+              className={`file-input file-input-bordered w-full ${
+                photoError ? "file-input-error" : ""
+              }`}
+            />
+            {photoError && (
+              <p className="mt-1 flex items-center gap-1 text-xs font-medium text-error">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                <span>{photoError.message}</span>
+              </p>
+            )}
+          </>
         )}
       </div>
     </div>
   );
 }
+

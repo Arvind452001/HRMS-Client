@@ -33,10 +33,20 @@ const SalaryModal = ({ data, totals, onClose, logoSrc }) => {
   const handleDownload = async () => {
     setGeneratingPdf(true);
     try {
-      const monthLabel = data?.effectiveFrom
-        ? new Date(data.effectiveFrom).toLocaleString("en", { month: "short" })
-        : data?.month;
-      const fileName = `Salary-Slip-${employeeDoc.name || "Employee"}-${monthLabel}-${data?.year}.pdf`.replace(
+      const monthLabel = (() => {
+        if (data?.month && data?.year) {
+          const monthNum = Number(data.month);
+          if (!isNaN(monthNum) && monthNum >= 1 && monthNum <= 12) {
+            return new Date(data.year, monthNum - 1).toLocaleString("en", { month: "short" });
+          }
+          return data.month;
+        }
+        if (data?.effectiveFrom) {
+          return new Date(data.effectiveFrom).toLocaleString("en", { month: "short" });
+        }
+        return data?.month || "Slip";
+      })();
+      const fileName = `Salary-Slip-${employeeDoc.name || "Employee"}-${monthLabel}-${data?.year || ""}.pdf`.replace(
         /\s+/g,
         "_"
       );

@@ -12,8 +12,8 @@ export default function Payroll() {
     <div className="p-6">
       <h2 className="text-2xl font-bold mb-4">Payroll</h2>
 
-      <div className="overflow-x-auto">
-      <table className="table table-zebra min-w-100">
+      <div className="overflow-x-auto custom-scrollbar w-full">
+        <table className="table table-zebra w-full min-w-[600px]">
         <thead>
           <tr>
             <th>Employee</th>

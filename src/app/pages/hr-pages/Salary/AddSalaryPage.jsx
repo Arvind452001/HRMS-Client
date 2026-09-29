@@ -222,11 +222,13 @@ export default function AddSalaryPage() {
 
   // Get selected employee name for view mode title
   const selectedEmployee = employees?.find((emp) => emp._id === form.employee);
+  const employeeName =
+    selectedEmployee?.personal?.fullName || selectedEmployee?.name || "";
   const pageTitle = isAddMode
-    ? "Add New Salary Structure"
+    ? "Add New Salary"
     : isEditMode
-      ? `Edit Salary - ${selectedEmployee?.name || ""}`
-      : `View Salary - ${selectedEmployee?.name || ""}`;
+      ? `Edit Salary - ${employeeName}`
+      : `View Salary - ${employeeName}`;
 
   return (
     <div className="min-h-screen bg-base-200 py-8">
@@ -453,7 +455,7 @@ export default function AddSalaryPage() {
                 <button
                   type="button"
                   className="btn btn-ghost"
-                  onClick={() => navigate("/salary-list")}
+                  onClick={() => navigate("/hr/salary")}
                 >
                   Back
                 </button>

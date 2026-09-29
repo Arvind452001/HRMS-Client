@@ -144,8 +144,8 @@ export default function ApplicationsPage() {
       </div>
 
       {/* TABLE CARD */}
-      <div className="overflow-x-auto rounded-2xl border border-sky-100 bg-white/80 backdrop-blur-xl shadow-lg">
-        <table className="table table-zebra min-w-200">
+      <div className="overflow-x-auto w-full custom-scrollbar rounded-2xl border border-sky-100 bg-white/80 backdrop-blur-xl shadow-lg">
+        <table className="table table-zebra w-full min-w-[900px]">
           <thead className="bg-sky-600 shadow-lg">
             <tr className="text-md uppercase tracking-wider text-white">
               <th className="py-3">Candidate</th>

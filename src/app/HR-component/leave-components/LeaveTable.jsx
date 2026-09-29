@@ -1,19 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { showError, showSuccess, showConfirm } from "../../../utils/alert";
 import { getAllLeaveApi, updateLeaveStatusApi } from "../../../api/leaveApi";
-import { formatLeaveDates } from "../../../utils/leaveDates";
-
-// 🔥 DUAL APPROVAL: this page is shared by both HR and Admin (Admin has
-// access to every HR route). Which side the logged-in user acts as
-// decides whether they're reviewing the HR stage or the Admin stage of a
-// leave request.
-const getCurrentUser = () => {
-  try {
-    return JSON.parse(localStorage.getItem("technoUser")) || {};
-  } catch {
-    return {};
-  }
-};
 
 const LeaveTable = () => {
   const [leaves, setLeaves] = useState([]);
@@ -22,9 +9,6 @@ const LeaveTable = () => {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
-
-  const currentUser = useMemo(() => getCurrentUser(), []);
-  const isAdmin = (currentUser?.roles || []).includes("admin");
 
   const fetchLeaves = async () => {
     try {
@@ -202,21 +186,11 @@ const LeaveTable = () => {
                       </td>
 
                       <td className="px-4 py-4 text-sm text-gray-700 whitespace-nowrap border-b border-sky-50">
-                        {(() => {
-                          const { label, sub, tooltip } = formatLeaveDates(
-                            leave?.dates,
-                          );
-                          return (
-                            <div title={tooltip}>
-                              <p className="font-medium">{label}</p>
-                              {sub && (
-                                <p className="text-[10px] text-gray-400">
-                                  {sub}
-                                </p>
-                              )}
-                            </div>
-                          );
-                        })()}
+                        {leave?.dates?.map((date, i) => (
+                          <p key={i}>
+                            {new Date(date).toLocaleDateString("en-GB")}
+                          </p>
+                        ))}
                       </td>
 
                       <td className="px-4 py-4 text-sm text-gray-600 max-w-50 border-b border-sky-50">
@@ -228,94 +202,32 @@ const LeaveTable = () => {
                       </td>
 
                       <td className="px-4 py-4 border-b border-sky-50">
-                        <div className="flex flex-col gap-1">
-                          <span
-                            className={`px-3 py-1.5 rounded-xl text-[11px] font-semibold w-fit ${
-                              leave?.status === "APPROVED"
-                                ? "bg-green-100 text-green-700"
-                                : leave?.status === "REJECTED"
-                                ? "bg-red-100 text-red-700"
-                                : "bg-yellow-100 text-yellow-700"
-                            }`}
-                          >
-                            {leave?.status}
-                          </span>
-
-                          {/* Show which side it's still pending with, until fully decided */}
-                          {leave?.status === "PENDING" && (
-                            <span className="text-[10px] text-gray-500">
-                              HR:{" "}
-                              <span
-                                className={
-                                  leave?.hrApproval?.status === "APPROVED" ||
-                                  leave?.hrApproval?.status === "NOT_REQUIRED"
-                                    ? "text-green-600 font-semibold"
-                                    : "text-yellow-600 font-semibold"
-                                }
-                              >
-                                {leave?.hrApproval?.status === "NOT_REQUIRED"
-                                  ? "N/A"
-                                  : leave?.hrApproval?.status || "PENDING"}
-                              </span>
-                              {" · "}Admin:{" "}
-                              <span
-                                className={
-                                  leave?.adminApproval?.status === "APPROVED"
-                                    ? "text-green-600 font-semibold"
-                                    : "text-yellow-600 font-semibold"
-                                }
-                              >
-                                {leave?.adminApproval?.status || "PENDING"}
-                              </span>
-                            </span>
-                          )}
-                        </div>
+                        <span
+                          className={`px-3 py-1.5 rounded-xl text-[11px] font-semibold ${
+                            leave?.status === "APPROVED"
+                              ? "bg-green-100 text-green-700"
+                              : leave?.status === "REJECTED"
+                              ? "bg-red-100 text-red-700"
+                              : "bg-yellow-100 text-yellow-700"
+                          }`}
+                        >
+                          {leave?.status}
+                        </span>
                       </td>
 
                       <td className="px-4 py-4 border-b border-sky-50">
                         <div className="flex justify-center">
-                          {(() => {
-                            const mySide = isAdmin
-                              ? leave?.adminApproval?.status
-                              : leave?.hrApproval?.status;
-
-                            // Already fully decided (approved/rejected/cancelled) —
-                            // nothing left to do from here.
-                            if (leave?.status !== "PENDING") {
-                              return (
-                                <span className="text-xs text-gray-400">—</span>
-                              );
+                          <select
+                            value={leave?.status}
+                            onChange={(e) =>
+                              handleStatusChange(leave?._id, e.target.value)
                             }
-
-                            // This side (HR or Admin) already gave its decision
-                            // and it's now sitting with the other side.
-                            if (mySide && mySide !== "PENDING") {
-                              return (
-                                <span className="text-[11px] text-gray-500 italic">
-                                  Waiting for {isAdmin ? "HR" : "Admin"}
-                                </span>
-                              );
-                            }
-
-                            return (
-                              <select
-                                defaultValue=""
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  if (!val) return;
-                                  handleStatusChange(leave?._id, val);
-                                  e.target.value = "";
-                                }}
-                                className="min-w-37.5 px-3 py-2 rounded-xl border border-sky-200 bg-white text-sm text-gray-700 shadow-sm outline-none focus:ring-4 focus:ring-sky-100 cursor-pointer"
-                              >
-                                <option value="" disabled>
-                                  {isAdmin ? "Admin Action" : "HR Action"}
-                                </option>
-                                <option value="APPROVED">Approve</option>
-                                <option value="REJECTED">Reject</option>
-                              </select>
-                            );
-                          })()}
+                            className="min-w-37.5 px-3 py-2 rounded-xl border border-sky-200 bg-white text-sm text-gray-700 shadow-sm outline-none focus:ring-4 focus:ring-sky-100 cursor-pointer"
+                          >
+                            <option value="PENDING">Pending</option>
+                            <option value="APPROVED">Approved</option>
+                            <option value="REJECTED">Rejected</option>
+                          </select>
                         </div>
                       </td>
                     </tr>

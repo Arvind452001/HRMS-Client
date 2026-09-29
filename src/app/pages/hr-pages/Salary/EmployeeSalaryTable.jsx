@@ -165,8 +165,8 @@ const handleDelete = async (id, employeeName) => {
 
       {/* ================= TABLE CARD ================= */}
       <div className="overflow-hidden rounded-2xl border border-sky-100 bg-white shadow-sm">
-        <div className="overflow-x-auto custom-scrollbar">
-          <table className="w-full min-w-250 border-separate border-spacing-0">
+        <div className="overflow-x-auto w-full custom-scrollbar">
+          <table className="w-full min-w-[950px] border-separate border-spacing-0">
             {/* TABLE HEAD */}
             <thead>
               <tr className="bg-sky-600 text-white">

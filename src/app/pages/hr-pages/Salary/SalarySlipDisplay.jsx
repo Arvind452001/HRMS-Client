@@ -80,10 +80,20 @@ export default function SalarySlipPage() {
   const handlePDF = async () => {
     setGeneratingPdf(true);
     try {
-      const monthLabel = salary?.effectiveFrom
-        ? new Date(salary.effectiveFrom).toLocaleString("en", { month: "short" })
-        : salary.month;
-      const fileName = `Salary-Slip-${employeeDoc.name || "Employee"}-${monthLabel}-${salary.year}.pdf`
+      const monthLabel = (() => {
+        if (salary?.month && salary?.year) {
+          const monthNum = Number(salary.month);
+          if (!isNaN(monthNum) && monthNum >= 1 && monthNum <= 12) {
+            return new Date(salary.year, monthNum - 1).toLocaleString("en", { month: "short" });
+          }
+          return salary.month;
+        }
+        if (salary?.effectiveFrom) {
+          return new Date(salary.effectiveFrom).toLocaleString("en", { month: "short" });
+        }
+        return salary?.month || "Slip";
+      })();
+      const fileName = `Salary-Slip-${employeeDoc.name || "Employee"}-${monthLabel}-${salary?.year || ""}.pdf`
         .replace(/\s+/g, "_");
 
       await generatePdfFromNode(slipRef.current, fileName);

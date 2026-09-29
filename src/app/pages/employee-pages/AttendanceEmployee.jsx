@@ -137,8 +137,8 @@ export default function AttendanceEmployee() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-150 border-collapse text-sm">
+          <div className="overflow-x-auto w-full custom-scrollbar">
+            <table className="w-full min-w-[700px] border-collapse text-sm">
               {/* HEADER */}
               <thead>
                 <tr className="bg-slate-50/70 border-b border-slate-100 text-slate-500 text-xs font-semibold uppercase tracking-wider">

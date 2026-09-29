@@ -3,10 +3,7 @@ import jsPDF from "jspdf";
 
 /**
  * Renders a DOM node to a high-res canvas and drops it into an A4 PDF,
- * splitting across pages if the content is taller than one page.
- * This is the single PDF-generation path used everywhere in the app —
- * any screen that offers a "Download PDF" button should call this so
- * every downloaded PDF looks and behaves the same way.
+ * ensuring clean single-page output for salary slips.
  *
  * @param {HTMLElement} node - the element to capture
  * @param {string} fileName - e.g. "Salary-Slip-John_Doe-Jan-2026.pdf"
@@ -18,6 +15,7 @@ export async function generatePdfFromNode(node, fileName) {
     scale: 2,
     useCORS: true,
     backgroundColor: "#ffffff",
+    logging: false,
   });
 
   const imgData = canvas.toDataURL("image/png");
@@ -28,8 +26,8 @@ export async function generatePdfFromNode(node, fileName) {
     format: "a4",
   });
 
-  const pageWidth = pdf.internal.pageSize.getWidth();
-  const pageHeight = pdf.internal.pageSize.getHeight();
+  const pageWidth = pdf.internal.pageSize.getWidth(); // 210 mm
+  const pageHeight = pdf.internal.pageSize.getHeight(); // 297 mm
 
   const imgWidth = pageWidth;
   const imgHeight = (canvas.height * imgWidth) / canvas.width;
@@ -40,7 +38,8 @@ export async function generatePdfFromNode(node, fileName) {
   pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
   heightLeft -= pageHeight;
 
-  while (heightLeft > 0) {
+  // Use a 1.5mm threshold to avoid creating an empty second page from sub-pixel rounding
+  while (heightLeft > 1.5) {
     position = heightLeft - imgHeight;
     pdf.addPage();
     pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
@@ -49,3 +48,4 @@ export async function generatePdfFromNode(node, fileName) {
 
   pdf.save(fileName);
 }
+

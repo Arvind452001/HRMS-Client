@@ -83,7 +83,7 @@ export default function Employees() {
 
         {/* TABLE */}
 
-        <div className="overflow-x-auto custom-scrollbar">
+        <div className="overflow-x-auto w-full custom-scrollbar">
           {loading ? (
             <div className="p-16 flex justify-center">
               <Loader />
@@ -93,7 +93,7 @@ export default function Employees() {
               No employees found
             </div>
           ) : (
-            <table className="table table-zebra min-w-275 border-separate border-spacing-0">
+            <table className="table table-zebra w-full min-w-[950px] border-separate border-spacing-0">
               {/* TABLE HEAD */}
 
               <thead className="bg-sky-600 text-white">

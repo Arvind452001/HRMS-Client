@@ -183,8 +183,8 @@ export default function AttendanceLog() {
       </div>
 
       {/* ─── Table ─── */}
-      <div className="overflow-x-auto bg-base-100 shadow rounded-xl">
-        <table className="table min-w-150">
+      <div className="overflow-x-auto w-full custom-scrollbar bg-base-100 shadow rounded-xl">
+        <table className="table w-full min-w-[700px]">
           <thead>
             <tr>
               <th>Employee</th>

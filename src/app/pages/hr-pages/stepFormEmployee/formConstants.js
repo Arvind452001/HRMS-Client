@@ -10,6 +10,9 @@ import {
   ClipboardCheck,
 } from "lucide-react";
 
+export const MAX_FILE_SIZE_MB = 2;
+export const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+
 export const steps = [
   { label: "Personal", icon: User },
   { label: "Contact", icon: Phone },

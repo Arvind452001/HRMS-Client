@@ -36,7 +36,7 @@ const EmployeeLayout = () => {
       {/* Right Section */}
       <div
         className={`flex flex-col h-screen transition-all duration-300 ${
-          sidebarOpen ? "md:ml-64 ml-0" : "ml-0"
+          sidebarOpen ? "md:ml-68 ml-0" : "ml-0"
         }`}
       >
         {/* Header */}

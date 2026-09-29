@@ -56,7 +56,6 @@ export const menu = {
   admin: [
     { name: "Admin Dashboard", icon: LayoutGrid, path: "" }, // index route
     { name: "Users & Roles", icon: Users, path: "users" },
-     { name: "Leave Management", icon: Calendar, path: "leave" },
     { name: "Departments", icon: Briefcase, path: "departments" },
     { name: "Designations", icon: BriefcaseBusiness, path: "designations" },
     { name: "Audit Logs", icon: BarChart2, path: "audit-logs" },

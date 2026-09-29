@@ -96,21 +96,42 @@ h1, h2, h3, h4, h5, h6 {
 /* Slim, elegant scrollbars everywhere */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #cfe3f5 transparent;
+  scrollbar-color: #94a3b8 #f1f5f9;
 }
 *::-webkit-scrollbar {
   width: 7px;
   height: 7px;
 }
 *::-webkit-scrollbar-track {
-  background: transparent;
+  background: #f1f5f9;
+  border-radius: 999px;
 }
 *::-webkit-scrollbar-thumb {
-  background-color: #cfe3f5;
+  background-color: #cbd5e1;
   border-radius: 999px;
 }
 *::-webkit-scrollbar-thumb:hover {
-  background-color: #9cc7ea;
+  background-color: #94a3b8;
+}
+
+/* Custom scrollbar utility for tables */
+.custom-scrollbar {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+.custom-scrollbar::-webkit-scrollbar {
+  height: 7px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #94a3b8;
+  border-radius: 999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #64748b;
 }
 
 /* Professional table styling, applied to every table in the app */
@@ -123,6 +144,7 @@ table {
 
 /* Tables scroll horizontally on small screens instead of squeezing content */
 .overflow-x-auto {
+  overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
 

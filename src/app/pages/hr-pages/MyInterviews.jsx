@@ -149,8 +149,8 @@ const MyInterviews = () => {
 
       {/* TABLE SECTION */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="table w-full border-collapse">
+        <div className="overflow-x-auto w-full custom-scrollbar">
+          <table className="table w-full min-w-[850px] border-collapse">
             <thead>
               <tr className="bg-slate-50/70 border-b border-slate-100 text-slate-600 text-xs font-semibold uppercase tracking-wider">
                 <th className="p-4 text-left">Candidate</th>

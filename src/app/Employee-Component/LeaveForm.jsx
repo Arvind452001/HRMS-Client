@@ -14,39 +14,8 @@ const LeaveForm = () => {
     dates: [],
   });
 
-  // "range" = pick a single "from" and "to" date and every day in between
-  // is auto-filled; "multiple" = pick individual, possibly non-consecutive
-  // days one by one (old behaviour, kept as an option).
-  const [dateSelectionMode, setDateSelectionMode] = useState("range");
-  const [rangeValue, setRangeValue] = useState([]);
-
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-
-  // Expand a picked [from, to] range into every individual day in between
-  // (inclusive) — the backend still expects a flat `dates` array, so this
-  // keeps the API payload identical to the old multi-pick flow.
-  const expandDateRange = (start, end) => {
-    const startDate = start.toDate();
-    const endDate = end.toDate();
-    const [from, to] =
-      startDate <= endDate ? [startDate, endDate] : [endDate, startDate];
-
-    const list = [];
-    const cursor = new Date(from);
-    while (cursor <= to) {
-      list.push(new Date(cursor));
-      cursor.setDate(cursor.getDate() + 1);
-    }
-    return list;
-  };
-
-  // Some picked dates are react-multi-date-picker `DateObject`s (have
-  // .format()), others (range-expanded) are plain JS Dates — handle both.
-  const formatPickedDate = (date) =>
-    typeof date.format === "function"
-      ? date.format("YYYY-MM-DD")
-      : date.toISOString().split("T")[0];
 
   const leaveTypes = [
     "Sick Leave",
@@ -79,7 +48,9 @@ const LeaveForm = () => {
     }
 
     try {
-      const formattedDates = formData.dates.map(formatPickedDate);
+      const formattedDates = formData.dates.map((date) =>
+        date.format("YYYY-MM-DD"),
+      );
 
       // Sort dates chronologically
       formattedDates.sort((a, b) => new Date(a) - new Date(b));
@@ -102,7 +73,6 @@ const LeaveForm = () => {
         leaveMode: "",
         dates: [],
       });
-      setRangeValue([]);
     } catch (error) {
       showError(
         "Error",
@@ -183,122 +153,40 @@ const LeaveForm = () => {
             </div>
           </div>
 
-          {/* Date Selection */}
+          {/* Multi-Date Selection - Fixes the hover shrink glitch */}
           <div className="flex flex-col w-full">
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-semibold text-slate-600 tracking-wide">
-                Select Leave Dates <span className="text-red-400">*</span>
-              </label>
-
-              {/* Range vs individual-day picking */}
-              <div className="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-0.5 text-[11px] font-semibold">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDateSelectionMode("range");
-                    setFormData((prev) => ({ ...prev, dates: [] }));
-                    setRangeValue([]);
-                  }}
-                  className={`px-2.5 py-1 rounded-md transition-colors ${
-                    dateSelectionMode === "range"
-                      ? "bg-sky-600 text-white shadow-sm"
-                      : "text-slate-500 hover:text-slate-700"
-                  }`}
-                >
-                  From – To
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDateSelectionMode("multiple");
-                    setFormData((prev) => ({ ...prev, dates: [] }));
-                    setRangeValue([]);
-                  }}
-                  className={`px-2.5 py-1 rounded-md transition-colors ${
-                    dateSelectionMode === "multiple"
-                      ? "bg-sky-600 text-white shadow-sm"
-                      : "text-slate-500 hover:text-slate-700"
-                  }`}
-                >
-                  Pick Days
-                </button>
-              </div>
-            </div>
-
+            <label className="text-xs font-semibold text-slate-600 tracking-wide mb-1.5">
+              Select Leave Dates <span className="text-red-400">*</span>
+            </label>
             <div className="w-full block">
-              {dateSelectionMode === "range" ? (
-                <DatePicker
-                  range
-                  rangeHover
-                  value={rangeValue}
-                  onChange={(picked) => {
-                    const vals = picked || [];
-                    setRangeValue(vals);
-
-                    if (vals.length === 2) {
-                      setFormData((prev) => ({
-                        ...prev,
-                        dates: expandDateRange(vals[0], vals[1]),
-                      }));
-                    } else {
-                      setFormData((prev) => ({ ...prev, dates: [] }));
-                    }
-                  }}
-                  format="YYYY-MM-DD"
-                  minDate={today}
-                  containerClassName="w-full"
-                  style={{ width: "100%" }}
-                  inputClass="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:ring-4 focus:ring-sky-500/10 focus:border-sky-500 hover:border-slate-300 shadow-sm transition-colors cursor-pointer truncate"
-                  placeholder="Click to pick a from and to date"
-                />
-              ) : (
-                <DatePicker
-                  multiple
-                  value={formData.dates}
-                  onChange={(dates) =>
-                    setFormData({ ...formData, dates: dates || [] })
-                  }
-                  format="YYYY-MM-DD"
-                  minDate={today}
-                  containerClassName="w-full"
-                  style={{ width: "100%" }}
-                  inputClass="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:ring-4 focus:ring-sky-500/10 focus:border-sky-500 hover:border-slate-300 shadow-sm transition-colors cursor-pointer truncate"
-                  placeholder="Click to pick one or multiple dates"
-                />
-              )}
+              <DatePicker
+                multiple
+                value={formData.dates}
+                onChange={(dates) =>
+                  setFormData({ ...formData, dates: dates || [] })
+                }
+                format="YYYY-MM-DD"
+                minDate={today}
+                containerClassName="w-full"
+                style={{ width: "100%" }}
+                inputClass="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:ring-4 focus:ring-sky-500/10 focus:border-sky-500 hover:border-slate-300 shadow-sm transition-colors cursor-pointer truncate"
+                placeholder="Click to pick one or multiple dates"
+              />
             </div>
 
-            {/* Selected dates summary — compact range instead of a badge per day */}
-            {formData.dates.length > 0 &&
-              (() => {
-                const sorted = [...formData.dates].sort((a, b) => a - b);
-                const count = sorted.length;
-
-                if (dateSelectionMode === "range" && count > 1) {
-                  return (
-                    <div className="mt-2 px-3 py-2 bg-slate-50 border border-slate-100 rounded-xl text-xs font-semibold text-sky-700">
-                      {formatPickedDate(sorted[0])} →{" "}
-                      {formatPickedDate(sorted[count - 1])}{" "}
-                      <span className="text-slate-400 font-normal">
-                        ({count} days)
-                      </span>
-                    </div>
-                  );
-                }
-
-                return (
-                  <div className="mt-2 flex flex-wrap gap-1.5 p-2 bg-slate-50 border border-slate-100 rounded-xl max-h-20 overflow-y-auto">
-                    {sorted.map((date, idx) => (
-                      <span
-                        key={idx}
-                        className="inline-flex items-center text-xs font-semibold bg-sky-50 border border-sky-100 text-sky-700 px-2 py-0.5 rounded-md"
-                      >
-                        {formatPickedDate(date)}
-                      </span>
-                    ))}
-                  </div>
-                );
-              })()}
+            {/* Selected Dates Display Badges */}
+            {formData.dates.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5 p-2 bg-slate-50 border border-slate-100 rounded-xl max-h-20 overflow-y-auto">
+                {formData.dates.map((date, idx) => (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center text-xs font-semibold bg-sky-50 border border-sky-100 text-sky-700 px-2 py-0.5 rounded-md"
+                  >
+                    {date.format("YYYY-MM-DD")}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Contact Details */}

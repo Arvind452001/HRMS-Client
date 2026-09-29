@@ -243,8 +243,8 @@ const HrDashboard = () => {
               </span>
             </div>
 
-            <div className="max-h-100 overflow-y-auto overflow-x-auto no-scrollbar">
-              <table className="table w-full min-w-125">
+            <div className="max-h-100 overflow-y-auto overflow-x-auto custom-scrollbar">
+              <table className="table w-full min-w-[650px]">
                 <thead className="sticky top-0 z-10">
                   <tr>
                     <th>Name</th>

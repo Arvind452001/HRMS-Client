@@ -75,8 +75,8 @@ const SalaryTable = ({ salaries: propSalaries = [] }) => {
       </div>
 
       {/* TABLE */}
-      <div className="overflow-x-auto bg-white/80 backdrop-blur-lg shadow-sm rounded-2xl border border-white/40">
-        <table className="w-full min-w-175 text-sm">
+      <div className="overflow-x-auto w-full custom-scrollbar bg-white/80 backdrop-blur-lg shadow-sm rounded-2xl border border-white/40">
+        <table className="w-full min-w-[850px] text-sm">
           
           <thead className="bg-sky-600 text-white uppercase text-xs">
             <tr>

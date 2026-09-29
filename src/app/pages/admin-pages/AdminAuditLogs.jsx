@@ -108,7 +108,7 @@ export default function AdminAuditLogs() {
       </div>
 
       <div className="card bg-base-100 shadow-xl border border-base-200 rounded-3xl overflow-hidden">
-        <div className="overflow-x-auto custom-scrollbar">
+        <div className="overflow-x-auto w-full custom-scrollbar">
           {loading ? (
             <div className="p-16 flex justify-center">
               <Loader />
@@ -116,7 +116,7 @@ export default function AdminAuditLogs() {
           ) : logs.length === 0 ? (
             <div className="p-16 text-center text-gray-500 text-sm">No audit logs found</div>
           ) : (
-            <table className="table table-zebra min-w-225 border-separate border-spacing-0">
+            <table className="table table-zebra w-full min-w-[850px] border-separate border-spacing-0">
               <thead>
                 <tr>
                   <th>Date &amp; Time</th>

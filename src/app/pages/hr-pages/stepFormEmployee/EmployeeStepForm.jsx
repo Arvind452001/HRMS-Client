@@ -22,7 +22,7 @@ import {
   updateEmployeeApi,
 } from "../../../../api/employee-Api";
 import { FormModeContext } from "./context/FormModeContext";
-import { steps, buildInitialValues } from "./formConstants";
+import { steps, buildInitialValues, MAX_FILE_SIZE_MB, MAX_FILE_SIZE_BYTES } from "./formConstants";
 
 export default function EmployeeStepForm({
   mode = "create",
@@ -66,11 +66,39 @@ export default function EmployeeStepForm({
     });
   };
 
+  const checkFileSizes = (obj, path = "") => {
+    if (!obj) return;
+    if (obj instanceof FileList) {
+      for (let i = 0; i < obj.length; i++) {
+        if (obj[i].size > MAX_FILE_SIZE_BYTES) {
+          const sizeMB = (obj[i].size / (1024 * 1024)).toFixed(2);
+          throw new Error(
+            `File "${obj[i].name}" (${sizeMB} MB) exceeds the maximum allowed size of ${MAX_FILE_SIZE_MB} MB.`
+          );
+        }
+      }
+    } else if (obj instanceof File) {
+      if (obj.size > MAX_FILE_SIZE_BYTES) {
+        const sizeMB = (obj.size / (1024 * 1024)).toFixed(2);
+        throw new Error(
+          `File "${obj.name}" (${sizeMB} MB) exceeds the maximum allowed size of ${MAX_FILE_SIZE_MB} MB.`
+        );
+      }
+    } else if (typeof obj === "object") {
+      Object.keys(obj).forEach((key) =>
+        checkFileSizes(obj[key], path ? `${path}.${key}` : key)
+      );
+    }
+  };
+
   const onSubmit = async (data) => {
     if (isSubmitting) return;
     setIsSubmitting(true);
 
     try {
+      // Safety check: reject any oversized file before submitting
+      checkFileSizes(data);
+
       if (data.professional?.manager === "") {
         delete data.professional.manager;
       }

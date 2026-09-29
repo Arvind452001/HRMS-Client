@@ -117,7 +117,6 @@ export default function AppRoutes() {
           <Route index element={<AdminDashboard />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="users" element={<AdminUsers />} />
-          <Route path="leave" element={<LeaveManagement />} />
           <Route path="departments" element={<AdminDepartments />} />
           <Route path="designations" element={<AdminDesignations />} />
           <Route path="audit-logs" element={<AdminAuditLogs />} />
