@@ -1,10 +1,12 @@
-// EmployeeSalaryTable.jsx
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { deleteSalaryHR, getAllSalariesHR } from "../../../../api/Salary.Api";
+import {
+  autoGenerateSalaryHR,
+  deleteSalaryHR,
+  getAllSalariesHR,
+} from "../../../../api/Salary.Api";
 import Swal from "sweetalert2";
-import { Calendar, Eye, Pencil, Trash2 } from "lucide-react";
+import { Calendar, Eye, Pencil, Trash2, Zap } from "lucide-react";
 import { showError } from "../../../../utils/alert";
 
 export default function EmployeeSalaryTable() {
@@ -92,6 +94,59 @@ const handleDelete = async (id, employeeName) => {
   }
 };
 
+  // ================= AUTO GENERATE =================
+  const handleAutoGenerate = async () => {
+    if (!selectedMonth) return;
+    const [year, month] = selectedMonth.split("-").map(Number);
+    const monthName = new Date(year, month - 1).toLocaleString("en-US", {
+      month: "long",
+    });
+
+    const result = await Swal.fire({
+      title: "Auto-Generate Salaries?",
+      text: `Automatically generate monthly salary slips for all active employees for ${monthName} ${year}?`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#0284c7",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Yes, Generate",
+      cancelButtonText: "Cancel",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      setLoading(true);
+      const res = await autoGenerateSalaryHR({ month, year });
+      const data = res?.data?.data || {};
+
+      Swal.fire({
+        icon: "success",
+        title: "Generation Completed",
+        html: `
+          <div class="text-left text-sm space-y-1">
+            <p><b>Created:</b> ${data.createdCount || 0}</p>
+            <p><b>Skipped (Already Generated):</b> ${data.skippedCount || 0}</p>
+            <p><b>Failed:</b> ${data.failedCount || 0}</p>
+          </div>
+        `,
+        confirmButtonColor: "#0284c7",
+      });
+
+      loadSalaries(month, year);
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Auto-Generation Failed",
+        text:
+          error?.response?.data?.message ||
+          "Failed to generate monthly salaries.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // ================= PAGINATION =================
   const totalPages = Math.ceil(salaries.length / rowsPerPage);
   const startIndex = (currentPage - 1) * rowsPerPage;
@@ -153,6 +208,16 @@ const handleDelete = async (id, employeeName) => {
             <option value={50}>50/page</option>
           </select>
 
+          {/* AUTO GENERATE BUTTON */}
+          <button
+            className="btn btn-sm bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 border-0 text-white shadow-sm whitespace-nowrap flex items-center gap-1.5"
+            onClick={handleAutoGenerate}
+            title="Automatically generate salary slips for all active employees for this month"
+          >
+            <Zap size={14} />
+            Auto Generate
+          </button>
+
           {/* ADD BUTTON */}
           <button
             className="bg-sky-600 btn btn-sm border-0 text-white hover:scale-[1.02] transition-all duration-200 shadow-sm whitespace-nowrap"
@@ -188,6 +253,9 @@ const handleDelete = async (id, employeeName) => {
                 <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-wider">
                   Net Salary
                 </th>
+                <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                  Type
+                </th>
                 <th className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-wider last:rounded-tr-2xl">
                   Actions
                 </th>
@@ -199,7 +267,7 @@ const handleDelete = async (id, employeeName) => {
               {currentData.length === 0 ? (
                 <tr>
                   <td
-                    colSpan="7"
+                    colSpan="8"
                     className="text-center py-14 text-gray-500 bg-[#f4f8f8]"
                   >
                     No salary structures found for this month.
@@ -263,6 +331,26 @@ const handleDelete = async (id, employeeName) => {
                         <span className="bg-sky-600 px-4 py-3 rounded-full text-white text-sm font-bold shadow-sm">
                           ₹{salary.netSalary?.toLocaleString()}
                         </span>
+                      </td>
+
+                      {/* GENERATION TYPE */}
+                      <td className="px-2 py-3">
+                        <div className="flex flex-col items-start gap-1">
+                          <span
+                            className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                              salary.generationType === "AUTO"
+                                ? "bg-purple-100 text-purple-700"
+                                : "bg-sky-100 text-sky-700"
+                            }`}
+                          >
+                            {salary.generationType === "AUTO" ? "Auto" : "Manual"}
+                          </span>
+                          {salary.isManuallyModified && (
+                            <span className="text-[10px] bg-amber-100 text-amber-800 font-medium px-1.5 py-0.2 rounded">
+                              Edited
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       {/* ACTIONS BUTTONS */}

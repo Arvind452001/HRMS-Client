@@ -51,6 +51,7 @@ import AdminApplicantPage from "../pages/hr-pages/AdminApplicantPage";
 // Admin Panel
 import AdminLayout from "../layouts/AdminLayout";
 import AdminDashboard from "../pages/admin-pages/AdminDashboard";
+import AdminLeaveManagement from "../pages/admin-pages/AdminLeaveManagement";
 import AdminUsers from "../pages/admin-pages/AdminUsers";
 import AdminDepartments from "../pages/admin-pages/AdminDepartments";
 import AdminDesignations from "../pages/admin-pages/AdminDesignations";
@@ -116,6 +117,8 @@ export default function AppRoutes() {
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
           <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="leave" element={<AdminLeaveManagement />} />
+          <Route path="leaves" element={<AdminLeaveManagement />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="departments" element={<AdminDepartments />} />
           <Route path="designations" element={<AdminDesignations />} />

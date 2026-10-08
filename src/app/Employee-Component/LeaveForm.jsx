@@ -5,7 +5,7 @@ import { showWarning, showSuccess, showError } from "../../utils/alert";
 
 import { applyLeaveApi } from "../../api/leaveApi";
 
-const LeaveForm = () => {
+const LeaveForm = ({ onSuccess }) => {
   const [formData, setFormData] = useState({
     leaveType: "",
     reason: "",
@@ -13,6 +13,7 @@ const LeaveForm = () => {
     leaveMode: "",
     dates: [],
   });
+  const [submitting, setSubmitting] = useState(false);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -48,6 +49,7 @@ const LeaveForm = () => {
     }
 
     try {
+      setSubmitting(true);
       const formattedDates = formData.dates.map((date) =>
         date.format("YYYY-MM-DD"),
       );
@@ -73,11 +75,17 @@ const LeaveForm = () => {
         leaveMode: "",
         dates: [],
       });
+
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error) {
       showError(
         "Error",
-        error?.response?.data?.message || "Something went wrong",
+        error?.message || error?.response?.data?.message || "Something went wrong",
       );
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -195,12 +203,25 @@ const LeaveForm = () => {
               Emergency Contact Number <span className="text-red-400">*</span>
             </label>
             <input
-              type="text"
+              type="tel"
               name="emergencyContact"
+              inputMode="numeric"
+              maxLength={10}
               className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm font-medium placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-sky-500/10 focus:border-sky-500 hover:border-slate-300 shadow-sm transition-colors"
-              placeholder="e.g., +1 (555) 019-2834"
+              placeholder="Enter 10 digit mobile number"
               value={formData.emergencyContact}
-              onChange={handleChange}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, "");
+
+                if (value.length <= 10) {
+                  handleChange({
+                    target: {
+                      name: "emergencyContact",
+                      value,
+                    },
+                  });
+                }
+              }}
             />
           </div>
 

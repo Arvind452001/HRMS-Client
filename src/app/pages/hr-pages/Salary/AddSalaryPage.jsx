@@ -9,6 +9,7 @@ import {
 } from "../../../../api/Salary.Api";
 import Swal from "sweetalert2";
 import { showError } from "../../../../utils/alert";
+import { Calendar, Clock, DollarSign, FileText, User, AlertCircle, CheckCircle2 } from "lucide-react";
 
 export default function AddSalaryPage() {
   const navigate = useNavigate();
@@ -19,17 +20,21 @@ export default function AddSalaryPage() {
   const pathname = location.pathname;
   const isViewMode = pathname.includes("/view/");
   const isEditMode = pathname.includes("/edit/");
-  const isAddMode = pathname.includes("/add/");
+  const isAddMode = pathname.includes("/add") && !isViewMode && !isEditMode;
 
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(isEditMode || isViewMode);
+  const [salaryMeta, setSalaryMeta] = useState(null);
   const [form, setForm] = useState({
     employee: "",
     salaryType: "monthly",
     effectiveFrom: "",
     month: "",
     year: "",
+    workingDays: 0,
+    paidDays: 0,
+    leaveWithoutPay: 0,
     basic: "",
     hra: "",
     da: "",
@@ -40,7 +45,10 @@ export default function AddSalaryPage() {
     pf: "",
     esi: "",
     professionalTax: "",
+    leaveDeduction: 0,
     otherDeduction: "",
+    status: "generated",
+    remarks: "",
   });
 
   // Fetch employees for dropdown
@@ -58,12 +66,6 @@ export default function AddSalaryPage() {
   const loadEmployees = async () => {
     try {
       const res = await getAllEmployeesApi();
-      // Salary records only support employees from the classic
-      // "OldEmployee" directory (employeeType "old"). Employees
-      // onboarded through the newer interview/hiring pipeline live in
-      // a separate collection that the salary backend doesn't look
-      // up, so selecting one here would always fail with a confusing
-      // "Employee not found" error. Filter them out up front instead.
       const allEmployees = res?.data || [];
       const eligible = allEmployees.filter(
         (emp) => emp.employeeType !== "new",
@@ -79,31 +81,48 @@ export default function AddSalaryPage() {
     try {
       setPageLoading(true);
       const res = await getSalaryByIdHR(id);
-      const data = res.data.data;
+      const data = res?.data?.data || res?.data;
+      if (!data) return;
+
+      setSalaryMeta({
+        _id: data._id,
+        generationType: data.generationType || "MANUAL",
+        isManuallyModified: data.isManuallyModified || false,
+        generatedAt: data.generatedAt,
+        createdAt: data.createdAt,
+        updatedAt: data.updatedAt,
+        employeeDetails: data.employee,
+      });
+
       setForm({
         employee: data.employee?._id || data.employee || "",
         salaryType: data.salaryType || "monthly",
         effectiveFrom: data.effectiveFrom
           ? data.effectiveFrom.split("T")[0]
           : "",
-        month: data.month || "",
-        year: data.year || "",
-        basic: data.basic || "",
-        hra: data.hra || "",
-        da: data.da || "",
-        conveyanceAllowance: data.conveyanceAllowance || "",
-        medicalAllowance: data.medicalAllowance || "",
-        specialAllowance: data.specialAllowance || "",
-        bonus: data.bonus || "",
-        pf: data.pf || "",
-        esi: data.esi || "",
-        professionalTax: data.professionalTax || "",
-        otherDeduction: data.otherDeduction || "",
+        month: data.month ?? "",
+        year: data.year ?? "",
+        workingDays: data.workingDays ?? 0,
+        paidDays: data.paidDays ?? 0,
+        leaveWithoutPay: data.leaveWithoutPay ?? 0,
+        basic: data.basic ?? "",
+        hra: data.hra ?? "",
+        da: data.da ?? "",
+        conveyanceAllowance: data.conveyanceAllowance ?? "",
+        medicalAllowance: data.medicalAllowance ?? "",
+        specialAllowance: data.specialAllowance ?? "",
+        bonus: data.bonus ?? "",
+        pf: data.pf ?? "",
+        esi: data.esi ?? "",
+        professionalTax: data.professionalTax ?? "",
+        leaveDeduction: data.leaveDeduction ?? 0,
+        otherDeduction: data.otherDeduction ?? "",
+        status: data.status || "generated",
+        remarks: data.remarks || "",
       });
     } catch (error) {
       console.error(error);
       showError("Error", "Failed to load salary data");
-      // navigate("/salary-list");
     } finally {
       setPageLoading(false);
     }
@@ -114,7 +133,11 @@ export default function AddSalaryPage() {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
-  // Calculations
+  // Numeric Calculations
+  const workingDays = parseFloat(form.workingDays) || 0;
+  const paidDays = parseFloat(form.paidDays) || 0;
+  const leaveWithoutPay = parseFloat(form.leaveWithoutPay) || 0;
+
   const basic = parseFloat(form.basic) || 0;
   const hra = parseFloat(form.hra) || 0;
   const da = parseFloat(form.da) || 0;
@@ -122,14 +145,16 @@ export default function AddSalaryPage() {
   const medicalAllowance = parseFloat(form.medicalAllowance) || 0;
   const special = parseFloat(form.specialAllowance) || 0;
   const bonus = parseFloat(form.bonus) || 0;
+
   const pf = parseFloat(form.pf) || 0;
   const esi = parseFloat(form.esi) || 0;
   const professionalTax = parseFloat(form.professionalTax) || 0;
+  const leaveDeduction = parseFloat(form.leaveDeduction) || 0;
   const other = parseFloat(form.otherDeduction) || 0;
 
   const gross =
     basic + hra + da + conveyanceAllowance + medicalAllowance + special + bonus;
-  const totalDeduction = pf + esi + professionalTax + other;
+  const totalDeduction = pf + esi + professionalTax + leaveDeduction + other;
   const net = gross - totalDeduction;
 
   const handleSubmit = async (e) => {
@@ -165,6 +190,9 @@ export default function AddSalaryPage() {
     try {
       const payload = {
         ...form,
+        workingDays,
+        paidDays,
+        leaveWithoutPay,
         basic,
         hra,
         da,
@@ -175,7 +203,13 @@ export default function AddSalaryPage() {
         pf,
         esi,
         professionalTax,
+        leaveDeduction,
         otherDeduction: other,
+        grossSalary: gross,
+        totalDeduction,
+        netSalary: net,
+        status: form.status || "generated",
+        remarks: form.remarks || "",
       };
 
       if (isEditMode) {
@@ -220,38 +254,96 @@ export default function AddSalaryPage() {
     );
   }
 
-  // Get selected employee name for view mode title
-  const selectedEmployee = employees?.find((emp) => emp._id === form.employee);
+  // Get selected employee name for view/edit mode title
+  const selectedEmployee =
+    employees?.find((emp) => emp._id === form.employee) ||
+    salaryMeta?.employeeDetails ||
+    null;
   const employeeName =
-    selectedEmployee?.personal?.fullName || selectedEmployee?.name || "";
+    selectedEmployee?.personal?.fullName ||
+    selectedEmployee?.name ||
+    (typeof form.employee === "object" ? form.employee?.personal?.fullName : "") ||
+    "";
+  const employeeIdStr =
+    selectedEmployee?.professional?.employeeId ||
+    selectedEmployee?.employeeId ||
+    "";
+
   const pageTitle = isAddMode
     ? "Add New Salary"
     : isEditMode
-      ? `Edit Salary - ${employeeName}`
-      : `View Salary - ${employeeName}`;
+      ? `Edit Salary - ${employeeName || "Employee"}`
+      : `View Salary - ${employeeName || "Employee"}`;
 
   return (
     <div className="min-h-screen bg-base-200 py-8">
       <div className="container mx-auto px-4 max-w-5xl">
         <div className="card bg-base-100 shadow-xl">
           <div className="card-body">
+            {/* Header section */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-              <h2 className="card-title text-3xl text-primary m-0">
-                {pageTitle}
-              </h2>
+              <div className="flex flex-wrap items-center gap-3">
+                <h2 className="card-title text-3xl text-primary m-0">
+                  {pageTitle}
+                </h2>
+                {employeeIdStr && (
+                  <span className="badge badge-outline text-xs font-mono font-medium">
+                    {employeeIdStr}
+                  </span>
+                )}
+                {salaryMeta && (
+                  <span
+                    className={`badge badge-sm font-semibold ${
+                      salaryMeta.generationType === "AUTO"
+                        ? "badge-secondary"
+                        : "badge-primary"
+                    }`}
+                  >
+                    {salaryMeta.generationType === "AUTO"
+                      ? "Auto-Generated"
+                      : "Manual"}
+                    {salaryMeta.isManuallyModified && " • Modified"}
+                  </span>
+                )}
+                {form.status && (
+                  <span
+                    className={`badge badge-sm font-semibold uppercase ${
+                      form.status === "paid"
+                        ? "badge-success text-white"
+                        : form.status === "draft"
+                          ? "badge-warning"
+                          : "badge-info text-white"
+                    }`}
+                  >
+                    {form.status}
+                  </span>
+                )}
+              </div>
               {(isEditMode || isViewMode) && id && (
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={() => navigate(`/hr/salary/slip/${id}`)}
-                >
-                  Generate Salary Slip
-                </button>
+                <div className="flex items-center gap-2">
+                  {isViewMode && (
+                    <button
+                      type="button"
+                      className="btn btn-outline btn-primary btn-sm"
+                      onClick={() => navigate(`/hr/salary/edit/${id}`)}
+                    >
+                      Edit Salary
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-sm"
+                    onClick={() => navigate(`/hr/salary/slip/${id}`)}
+                  >
+                    Generate Salary Slip
+                  </button>
+                </div>
               )}
             </div>
 
             <form onSubmit={handleSubmit}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Basic & Period Info Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {/* Employee Select */}
                 <div className="form-control">
                   <label className="label">
@@ -265,9 +357,15 @@ export default function AddSalaryPage() {
                     disabled={isViewMode}
                   >
                     <option value="">Select Employee</option>
+                    {/* If employee not yet in list but loaded from salary meta */}
+                    {form.employee && !employees.some((e) => e._id === form.employee) && employeeName && (
+                      <option value={form.employee}>
+                        {employeeName} {employeeIdStr ? `(${employeeIdStr})` : ""}
+                      </option>
+                    )}
                     {employees.map((emp) => (
                       <option key={emp._id} value={emp._id}>
-                        {emp.personal.fullName} - {emp.professional.employeeId}
+                        {emp.personal?.fullName || emp.name} - {emp.professional?.employeeId}
                       </option>
                     ))}
                   </select>
@@ -338,7 +436,7 @@ export default function AddSalaryPage() {
                       "Dec",
                     ].map((m, i) => (
                       <option key={i + 1} value={i + 1}>
-                        {m}
+                        {m} ({i + 1})
                       </option>
                     ))}
                   </select>
@@ -361,63 +459,112 @@ export default function AddSalaryPage() {
                     required
                   />
                 </div>
+
+                {/* Status */}
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text font-medium">Salary Status</span>
+                  </label>
+                  <select
+                    className={`select select-bordered ${isViewMode ? "select-ghost bg-base-200" : ""}`}
+                    value={form.status}
+                    onChange={(e) => updateField("status", e.target.value)}
+                    disabled={isViewMode}
+                  >
+                    <option value="draft">Draft</option>
+                    <option value="generated">Generated</option>
+                    <option value="paid">Paid</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Attendance & Working Days Section */}
+              <div className="mt-6 p-4 bg-base-200/60 rounded-2xl border border-base-300">
+                <h4 className="font-semibold text-md text-sky-700 dark:text-sky-400 mb-3 flex items-center gap-2">
+                  <Clock size={18} />
+                  Attendance &amp; Days Details
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {/* Working Days */}
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text font-medium">Total Working Days</span>
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      className={`input input-bordered bg-base-100 ${isViewMode ? "input-ghost bg-base-200" : ""}`}
+                      placeholder="0"
+                      value={form.workingDays}
+                      onChange={(e) => updateField("workingDays", e.target.value)}
+                      disabled={isViewMode}
+                    />
+                  </div>
+
+                  {/* Paid Days */}
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text font-medium text-emerald-700 dark:text-emerald-400">
+                        Paid Days
+                      </span>
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      className={`input input-bordered bg-base-100 ${isViewMode ? "input-ghost bg-base-200" : ""}`}
+                      placeholder="0"
+                      value={form.paidDays}
+                      onChange={(e) => updateField("paidDays", e.target.value)}
+                      disabled={isViewMode}
+                    />
+                  </div>
+
+                  {/* Leave Days / Leave Without Pay */}
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text font-medium text-rose-700 dark:text-rose-400">
+                        Leave Days (LWP)
+                      </span>
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      className={`input input-bordered bg-base-100 ${isViewMode ? "input-ghost bg-base-200" : ""}`}
+                      placeholder="0"
+                      value={form.leaveWithoutPay}
+                      onChange={(e) => updateField("leaveWithoutPay", e.target.value)}
+                      disabled={isViewMode}
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* Earnings Section */}
               <div className="mt-6">
-                <h4 className="font-semibold text-lg mb-3 text-success">
+                <h4 className="font-semibold text-lg mb-3 text-success flex items-center gap-2">
+                  <DollarSign size={18} />
                   Earnings
                 </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {[
-                    "basic",
-                    "hra",
-                    "da",
-                    "conveyanceAllowance",
-                    "medicalAllowance",
-                    "specialAllowance",
-                    "bonus",
-                  ].map(
-                    (field) => (
-                      <div className="form-control" key={field}>
-                        <label className="label">
-                          <span className="label-text capitalize">
-                            {field.replace(/([A-Z])/g, " $1")}
-                          </span>
-                        </label>
-                        <input
-                          type="number"
-                          className={`input input-bordered ${isViewMode ? "input-ghost bg-base-200" : ""}`}
-                          placeholder="0"
-                          value={form[field]}
-                          onChange={(e) => updateField(field, e.target.value)}
-                          disabled={isViewMode}
-                        />
-                      </div>
-                    ),
-                  )}
-                </div>
-              </div>
-
-              {/* Deductions Section */}
-              <div className="mt-6">
-                <h4 className="font-semibold text-lg mb-3 text-error">
-                  Deductions
-                </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {["pf", "esi", "professionalTax", "otherDeduction"].map((field) => (
-                    <div className="form-control" key={field}>
+                  {[
+                    { key: "basic", label: "Basic Salary" },
+                    { key: "hra", label: "HRA" },
+                    { key: "da", label: "DA" },
+                    { key: "conveyanceAllowance", label: "Conveyance Allowance" },
+                    { key: "medicalAllowance", label: "Medical Allowance" },
+                    { key: "specialAllowance", label: "Special Allowance" },
+                    { key: "bonus", label: "Bonus" },
+                  ].map(({ key, label }) => (
+                    <div className="form-control" key={key}>
                       <label className="label">
-                        <span className="label-text capitalize">
-                          {field.replace(/([A-Z])/g, " $1")}
-                        </span>
+                        <span className="label-text font-medium">{label}</span>
                       </label>
                       <input
                         type="number"
                         className={`input input-bordered ${isViewMode ? "input-ghost bg-base-200" : ""}`}
                         placeholder="0"
-                        value={form[field]}
-                        onChange={(e) => updateField(field, e.target.value)}
+                        value={form[key]}
+                        onChange={(e) => updateField(key, e.target.value)}
                         disabled={isViewMode}
                       />
                     </div>
@@ -425,26 +572,98 @@ export default function AddSalaryPage() {
                 </div>
               </div>
 
+              {/* Deductions Section */}
+              <div className="mt-6">
+                <h4 className="font-semibold text-lg mb-3 text-error flex items-center gap-2">
+                  <AlertCircle size={18} />
+                  Deductions
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                  {[
+                    { key: "pf", label: "Provident Fund (PF)" },
+                    { key: "esi", label: "ESI" },
+                    { key: "professionalTax", label: "Professional Tax (PT)" },
+                    { key: "leaveDeduction", label: "Leave Deduction" },
+                    { key: "otherDeduction", label: "Other Deduction" },
+                  ].map(({ key, label }) => (
+                    <div className="form-control" key={key}>
+                      <label className="label">
+                        <span className="label-text font-medium">{label}</span>
+                      </label>
+                      <input
+                        type="number"
+                        className={`input input-bordered ${isViewMode ? "input-ghost bg-base-200" : ""}`}
+                        placeholder="0"
+                        value={form[key]}
+                        onChange={(e) => updateField(key, e.target.value)}
+                        disabled={isViewMode}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Remarks Section */}
+              <div className="mt-6">
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text font-medium flex items-center gap-1.5">
+                      <FileText size={15} /> Remarks / Note
+                    </span>
+                  </label>
+                  <input
+                    type="text"
+                    className={`input input-bordered w-full ${isViewMode ? "input-ghost bg-base-200" : ""}`}
+                    placeholder="e.g. Auto-generated monthly salary slip / Monthly bonus included"
+                    value={form.remarks}
+                    onChange={(e) => updateField("remarks", e.target.value)}
+                    disabled={isViewMode}
+                  />
+                </div>
+              </div>
+
               {/* Summary Card */}
-              <div className="mt-6 p-4 bg-base-200 rounded-xl">
-                <h4 className="font-semibold text-md mb-2">Salary Summary</h4>
+              <div className="mt-6 p-4 bg-base-200 rounded-2xl border border-base-300">
+                <h4 className="font-semibold text-md mb-3">Salary &amp; Days Summary</h4>
+                
+                {/* Days mini stats */}
+                <div className="grid grid-cols-3 gap-2 mb-4 p-3 bg-base-100 rounded-xl text-center border border-base-300">
+                  <div>
+                    <span className="text-xs text-base-content/60">Working Days</span>
+                    <p className="text-lg font-bold text-slate-800 dark:text-slate-200">{workingDays}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-emerald-600 font-medium">Paid Days</span>
+                    <p className="text-lg font-bold text-emerald-600">{paidDays}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-rose-600 font-medium">Leave Days (LWP)</span>
+                    <p className="text-lg font-bold text-rose-600">{leaveWithoutPay}</p>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
-                  <div className="stat">
-                    <div className="stat-title text-primary">Gross Salary</div>
+                  <div className="stat bg-base-100 rounded-xl p-3 shadow-xs">
+                    <div className="stat-title text-primary font-medium">Gross Salary</div>
                     <div className="stat-value text-primary text-2xl">
-                      ₹{gross.toLocaleString()}
+                      ₹{gross.toLocaleString("en-IN")}
                     </div>
                   </div>
-                  <div className="stat">
-                    <div className="stat-title text-error">Total Deduction</div>
+                  <div className="stat bg-base-100 rounded-xl p-3 shadow-xs">
+                    <div className="stat-title text-error font-medium">Total Deduction</div>
                     <div className="stat-value text-error text-2xl">
-                      ₹{totalDeduction.toLocaleString()}
+                      ₹{totalDeduction.toLocaleString("en-IN")}
                     </div>
+                    {leaveDeduction > 0 && (
+                      <div className="stat-desc text-rose-500 text-[11px] mt-0.5">
+                        Incl. ₹{leaveDeduction.toLocaleString("en-IN")} leave deduction
+                      </div>
+                    )}
                   </div>
-                  <div className="stat">
-                    <div className="stat-title text-success">Net Salary</div>
-                    <div className="stat-value text-success text-2xl">
-                      ₹{net.toLocaleString()}
+                  <div className="stat bg-base-100 rounded-xl p-3 shadow-xs">
+                    <div className="stat-title text-success font-medium">Net Salary</div>
+                    <div className="stat-value text-success text-2xl font-extrabold">
+                      ₹{net.toLocaleString("en-IN")}
                     </div>
                   </div>
                 </div>
@@ -468,7 +687,7 @@ export default function AddSalaryPage() {
                     {loading && (
                       <span className="loading loading-spinner loading-sm"></span>
                     )}
-                    {isEditMode ? "Update" : "Save"}
+                    {isEditMode ? "Update Salary" : "Save Salary"}
                   </button>
                 )}
               </div>

@@ -16,6 +16,7 @@ export const getAllSalariesHR = (month, year) => axiosInstance.get(`/salary/getA
 export const getSalaryByIdHR = (id) => axiosInstance.get(`/salary/getSalaryBySalaryId/${id}`);
 export const getSalaryByEmpIdHR = (id) => axiosInstance.get(`/salary/getSalaryByEmployeeId/${id}`);
 export const createSalaryHR = (data) => axiosInstance.post("/salary/create-Salary", data);
+export const autoGenerateSalaryHR = (data) => axiosInstance.post("/salary/auto-generate", data);
 export const updateSalaryHR = (id, data) => axiosInstance.patch(`/salary/updateSalary/${id}`, data);
 export const deleteSalaryHR = (id) => axiosInstance.delete(`/salary/deleteSalary/${id}`);
 

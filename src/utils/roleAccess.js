@@ -4,7 +4,11 @@
 // Employee view from there via the toggle). A user with only the
 // "employee" role lands on the Employee dashboard.
 export const getLandingRoute = (roles = []) => {
-  if (roles.includes("hr") || roles.includes("admin")) {
+  if (roles.includes("admin")) {
+    return "/admin";
+  }
+
+  if (roles.includes("hr")) {
     return "/hr/dashboard";
   }
 

@@ -55,6 +55,7 @@ export const menu = {
   // pages.
   admin: [
     { name: "Admin Dashboard", icon: LayoutGrid, path: "" }, // index route
+    { name: "Leave Management", icon: Calendar, path: "leave" },
     { name: "Users & Roles", icon: Users, path: "users" },
     { name: "Departments", icon: Briefcase, path: "departments" },
     { name: "Designations", icon: BriefcaseBusiness, path: "designations" },

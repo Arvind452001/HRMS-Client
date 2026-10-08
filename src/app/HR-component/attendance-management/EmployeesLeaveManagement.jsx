@@ -21,9 +21,17 @@ export default function EmployeesLeaveManagement() {
         let rejected = 0;
 
         leaves.forEach((leave) => {
-          if (leave.status === "PENDING") pending += 1;
-          else if (leave.status === "APPROVED") approved += 1;
-          else if (leave.status === "REJECTED") rejected += 1;
+          if (
+            leave.status === "PENDING" ||
+            leave.status === "PENDING_HR" ||
+            leave.status === "PENDING_ADMIN"
+          ) {
+            pending += 1;
+          } else if (leave.status === "APPROVED") {
+            approved += 1;
+          } else if (leave.status === "REJECTED") {
+            rejected += 1;
+          }
         });
 
         setCounts({ pending, approved, rejected });

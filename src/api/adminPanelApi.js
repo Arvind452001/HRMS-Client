@@ -88,7 +88,11 @@ export const updateSystemSettingsApi = (data) =>
 export const getAuditLogsApi = (params) =>
   handle(axiosInstance.get("/audit-logs", { params }));
 
+export const getAuditStatsApi = () =>
+  handle(axiosInstance.get("/audit-logs/stats/summary"));
+
 // PUBLIC SYSTEM STATUS (used by the Maintenance screen — no admin rights needed)
 
 export const getSystemStatusApi = () =>
   handle(axiosInstance.get("/system-status"));
+
